@@ -169,27 +169,41 @@ message RebootRequest {
   string code = 1;
 }
 
+//returns protocol response information
 message GetProtocolVersionResponse {
   BasicResponse resp = 1;
 
+  //the protocol version
   string version = 2;
 }
 
+//the communications channel for registering a mqtt integration
 message MqttCommsIntegration {
+  //the host to which messages must be sent
   string host = 1;
+
+  //the port to which messages must be sent
   uint32 port = 2;
 }
 
+//used to register an external integration with the mqtt service
 message RegisterMqttIntegrationRequest {
+  //the name of the integration
   string name = 1;
+
+  //integration details (see message definition for more)
   MqttCommsIntegration integration = 2;
 }
 
+
+//basic response message after registering a mqtt integration
 message RegisterMqttIntegrationResponse {
   BasicResponse resp = 1;
 }
 
+//message to unregister an integration
 message UnregisterMqttIntegrationRequest {
+  //the name of the integration, specified when registering
   string name = 1;
 }
 
@@ -203,9 +217,13 @@ message IntegrationItem {
   string send_addr = 2;
 }
 
+//a notification message
 message NotificationMessageRequest {
+  //the type of notification message
   string msg_type = 1;
   repeated KVPairItem vals = 2;
+
+  //if specified, the address to which the message must be sent.
   IntegrationItem integration = 3;
 }
 
@@ -298,6 +316,6 @@ service CommsService {
   //1.0.2
   rpc unregister_mqtt_integration(UnregisterMqttIntegrationRequest) returns (RegisterMqttIntegrationResponse);
 
-  //allows a third party app to send a non-vg notification message
+  //allows a third party app to send a non-vg notification message.
   rpc send_notification(NotificationMessageRequest) returns (BasicResponse);
 }

@@ -1,5 +1,11 @@
 # Unit Hardware Integration Document
 
+## Validity
+
+This document is valid as of:
+- cvmain version 1.2.6
+- 7 December 2023
+
 ## Overview
 The vaultgroup locker system comprises a mix of various hardware boards
 and the software required to control that hardware. All hardware access
@@ -51,6 +57,11 @@ docker run -it 825351766998.dkr.ecr.eu-west-1.amazonaws.com/cvmain_rs:latest
 
 All data is in the /Projects folder, including the cloned git code. The repo is ready
 for PC and android builds.
+
+## MQTT services
+
+The system provides an optional MQTT facility, depending on the solution.
+For details, please refer to the documentation for the MQTT project.
 
 ## Basic Messages
 
@@ -501,7 +512,85 @@ message RebootRequest {
 }
 ```
 
+### Register MQTT integration
 
+Depending on the solution, the platform may run a
+MQTT service for server-to-client messages. If in use,
+this endpoint allows a non-cvmain application to
+register for messages. When an MQTT message is received,
+the details of this integration allow the message to be
+directed to the correct destination.
+
+Every name must be unique. Names beginning with "vg:" are
+reserved for Vaultgroup applications.
+
+If this call is made more than once with the same integration
+name, the integration details are updated only i.e. it is safe
+to register an integration more than once.
+
+```
+//Used to register an mqtt integration by an external app. Available as of
+//1.0.2
+rpc register_mqtt_integration(RegisterMqttIntegrationRequest) returns (RegisterMqttIntegrationResponse);
+
+//used to register an external integration with the mqtt service
+message RegisterMqttIntegrationRequest {
+  //the name of the integration
+  string name = 1;
+
+  //integration details (see message definition for more)
+  MqttCommsIntegration integration = 2;
+}
+
+//basic response message after registering a mqtt integration
+message RegisterMqttIntegrationResponse {
+  BasicResponse resp = 1;
+}
+```
+
+### Unregister MQTT integration
+
+Removes the registered MQTT integration, if it exists.
+
+```
+//Used to unregister an mqtt integration by an external app. Available as of
+//1.0.2
+rpc unregister_mqtt_integration(UnregisterMqttIntegrationRequest) returns (RegisterMqttIntegrationResponse);
+
+//message to unregister an integration
+message UnregisterMqttIntegrationRequest {
+  //the name of the integration, specified when registering
+  string name = 1;
+}
+```
+
+### Send notification
+
+Allows a third party app (eg. A customer) to send a non-vaulgroup
+message, should they need to. The message will be sent via the notification
+system, using the notification message format.
+
+```
+//allows a third party app to send a non-vg notification message.
+rpc send_notification(NotificationMessageRequest) returns (BasicResponse);
+
+ /// the first string is the address:port to which we must bind. The second
+ /// is the address:port to which the message must be sent
+message IntegrationItem {
+  string bind_addr = 1;
+  string send_addr = 2;
+}
+
+//a notification message
+message NotificationMessageRequest {
+  //the type of notification message
+  string msg_type = 1;
+  repeated KVPairItem vals = 2;
+
+  //if specified, the address to which the message must be sent.
+  IntegrationItem integration = 3;
+}
+```
 
 ### User event callbacks
 
@@ -637,5 +726,231 @@ Notification sent when an RFID card was read successfully, but it could not be m
 against a valid value in the internal database.
 
 Data structure is same as for "RFID card", but the type is "rfid_unknown"
+
+
+## Configuration
+
+At startup, the system requires a configuration directory as a
+parameter. All configuration items for the application are contained
+within this directory. Switching between testing environments and
+production environments is also a simple case of restarting the application
+with a different configuration directory.
+
+The main configuration items are documented below.
+
+### config.json
+
+This is the main configuration file. It is mandatory.
+An documented example is shown below
+
+```
+{
+  //the type of communication system to use. This may be "net" or "serial"
+  //"serial" connects to a RS232 port (physical, virtual, USB->serial, etc).
+  //"net" connects via TCP, to a device that must provide
+  //a TCP->[RS232/other] protocol conversion. "net" can be used
+  //with android integrations to allow for WiFi->RS232 conversions, when
+  //coupled with the VG WiFi->RS232 passthrough device. Alternatively, it may
+  //be used for testing on a laptop by using a tool like "socat" to provide
+  //a TCP->[virtual/physical RS232] passthrough.
+  "comms": "net",
+  
+  //The communications latency multiplier. When using "net", the 
+  //receive latency on messages may be greater, depending on the network
+  //configuration (for instance, when using WiFi->RS232, there's now
+  //WiFi latency, RS232 latency, and the latency associated with converting
+  //WiFi data to RS232). This affects timing. This field allows for the timing
+  //to be adjusted. When using "serial", this should be set to 1. When using "net"
+  //the WiFi to RS232 passthrough, it is typically set to between 3 and 5. 
+  //When using a laptop and something like socat, a value of 1-2 usually works,
+  //assuming "socat" is running on localhost. Should a value of 10 or more be 
+  //required, it is usually a good indicator that your network configuration should
+  //be adjusted. 
+  "comms_rx_multiplier": 1,
+  
+  //configuration for the duress integration. Duress messages may be
+  //triggered from any source (eg. via a button connected to a GPIO, via a
+  //special code entered on a keypad, etc). Regardless of the source, 
+  //duress messages are converted to files placed in a directory. When cvmain
+  //sees one of these files, a duress event is generated and sent to the server.
+  //By using files as the integration, it allows for duress messages to be triggered
+  //from any source, including a client application. Hypothetically, a client may
+  //use a camera combined with AI to identify a "duress" situation using a proprietary
+  //application, then simply create an appropriate duress file. cvmain will
+  //identify the file and take care of the rest.
+  "duress": {
+    //the directory where cvmain will look for duress files
+    "cache_dir": "var/duress",
+    
+    //the name of the file created by a hardware trigger. For
+    //instance, if a panic button is pressed, the system may
+    //detect it and create this file to indicate a duress
+    "hw_duress_trigger_file": "duress",
+    
+    //the name of the file created by a user/software tigger. For
+    //instance, if the user types a special code on the keypad to
+    //trigger a duress, the duress system should create this file.
+    "user_duress_trigger_file": "user_duress"
+  },
+  
+  //Certain operations are performed by using external applications
+  //or scripts. These are always found in the "bin" directory within
+  //the main config directory
+  "external_bins": {
+    //This sets the date and time on the platform. It may be adjusted,
+    //depending the the platform. For instance, when using a raspberry pi,
+    //this script changes the date/time on the system. When used on
+    //a PC during testing, this script does nothing because the PC time
+    //is usually managed by the OS. Similarly for Android, this script does
+    //nothing since Android manages the date/time.
+    "datetime": "set_date.sh",
+    
+    //The script/app to reboot the system. Used on a RPI,
+    //but it is usually set to an empty script for Android and
+    //developement systems
+    "reboot": "reboot.sh"
+  },
+  
+  //how frequently the system must refresh its
+  //settings from the server. This is particularly useful
+  //when working with rfid cards. The value is specified in ms.
+  "get_settings_time": 3600000,
+  
+  //cvmain integrates with external system by using a gRPC server.
+  //this is the configuration for that server
+  "local_server": {
+    //the host and port to which to bind. By default, the system binds to
+    //localhost i.e. 127.0.0.1. This is usually good for production, but
+    //inconvenient for development. Consider binding to 0.0.0.0 if
+    //external connections are required (eg. if you want to test with something
+    //like BloomRPC or Postman running on your PC)
+    "bind_addr": "127.0.0.1:7777"
+  },
+  
+  //when true, additional debug messages are displayed
+  "log_debug": false,
+  
+  //The column mapping i.e. the number of lockers in each
+  //column. eg. 5,6,6 means there are 3 columns with 5 lockers,
+  //6 lockers, and 6 lockers, respectively. Note that currently,
+  //and depending on your configuration, a maximum of 16 columns
+  //may be specified. On each column, there is a maximum of 6 lockers.
+  "mapping": [
+    6
+  ],
+  
+  //for mqtt. Settings like mqtt values are obtained from
+  //the server as part of the system settings, and kept in the
+  //"mq" directory. All mqtt configurations are managed in
+  //this "mq" directory as well.
+  //
+  //Note: if external_integrations is true and msgs_via_notifier
+  //is true, it is possible that 2 messages will be sent. If both
+  //are false, no message will be sent.
+  "mq": {
+    //when true, mqtt messages for external integrations can be
+    //sent via the IP addresses specified when the integration
+    //was registered.
+    "external_integrations": false,
+    
+    //mqtt messages are just general notification messages.
+    //when using an external integration, messages may be
+    //sent via that integration. However, for simplicity, a client
+    //may want to just sent their mqtt messages via the notification
+    //system. Setting this to true sends client mqtt messages
+    //via the standard system notifier.
+    "msgs_via_notifier": true
+  }
+  
+  //when the "comms" field is set to "net", this
+  //configuration block is used
+  "net": {
+    //the ip/port to which cvmain will connect
+    "url": "192.168.64.3:5433"
+  },
+  
+  //configuration of the notification server, for
+  //sending notification messages
+  "notification_server": {
+    //the address where the notification server will bind
+    "bind_addr": "127.0.0.1:5554",
+    
+    //the address where notification messages will be sent
+    "send_addr": "127.0.0.1:5555"
+  },
+  
+  //configuation for the vaultgroup server
+  "remote_server": {
+    //address of the vaultgroup server
+    "base_url": "https://saas.vaultgroup-cloud.com"
+  },
+  
+  //rfid card configuration
+  "rfid_cards": {
+    //where rfid card scans will be found.
+    //card scans are handled by an external application,
+    //allowing for a variety of rfid hardware integrations
+    //to be used.
+    //
+    //When a card is scanned, the file "rfid_card" is
+    //created an placed in this directory. "rfid_card"
+    //is a text file with exactly 2 lines. line1==the rfid
+    //card value, and line2==the date/time in RFC3339 format.
+    "cache_dir": "var/cards"
+  },
+  
+  //how frequently, in ms, to refresh the date/time from the server
+  //to ensure the date/time on the system is correct.
+  "rtc_refresh_time": 1800000,
+  
+  //when the "comms" field is set to "serial", this
+  //configuration block is used
+  "serial": {
+    //the path to the serial port
+    "port": "/dev/ttyS0"
+  },
+  
+  //the VG time server
+  "timeserver": {
+    //address of the VG time server. Note that this is HTTP, not HTTPS.
+    //Should the date/time be sufficiently incorrect, a HTTPS handshake cannot
+    //be negotiated, hence HTTP is used. Please do not set this to HTTPS.
+    "url": "http://timeserver.vaultgroup-cloud.com/now"
+  },
+  
+  //VG provides 2 locking mechanisms, an "in-house" lock,
+  //and an off-the-shelf lock. When true, the system is configured to
+  //use the in-house lock. When false, the off-the-shelf lock is used
+  //instead
+  "use_cv_locks": true,
+  
+  //when true, the code is adapted to use multi-state slave firmware.
+  //This is only required if the product in question uses multi-state
+  //slave boards. Almost all customers will set this to false. If you 
+  //are not using multistate slave firwmare and this is set to true, the
+  //system will not start correctly, and complain about running an incorrect
+  //slave version.
+  "use_multistate_slave": false,
+  
+  //One of the VG hardware options is a numeric keypad that connects
+  //to the VG master board. If your hardware solution uses this keypad,
+  //set this option to true. If not, leave this option as false for a 
+  //performance boost.
+  "use_keypad": false
+}
+```
+
+### auth.json
+A file containing the username and password, to login to the
+vaultgroup server. This is configured at registration time only.
+
+### reboot_code
+In order to safely perform a remote reboot, this contents of this file are
+required.
+
+### log_conf.yaml
+The log configuration file. Logging is handled by the log4rs project,
+available [here](https://docs.rs/log4rs/latest/log4rs/)
+
 
 
