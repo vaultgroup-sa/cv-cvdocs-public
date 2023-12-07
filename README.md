@@ -78,3 +78,15 @@ Please see the "simulator/" directory for documentation.
 Visit https://github.com/vaultgroup-sa/cv-vaultgroup-sdk for a sample project that shows how
 code can be integrated with the VG SaaS platform. The code is free for use and modification.
 
+## MQTT Services
+
+MQTT services are available via the optional cvmqtt application. Documentation for this may be
+found in the "mqtt" directory. cvmqtt is a helper tool that is not directly used by
+third-party application developers. Integration is performed via cvmain. the cvmain
+documentation includes mqtt integration details, while the cvmqtt documentation contains
+specifics about naming conventions, etc.
+
+
+
+-----
+End of document
