@@ -154,7 +154,7 @@ Get all dashboard events.
 * `page` a 0-based number of a page to fetch;
 * `size` a number of elements per page (by-default it's `25`);
 * `sort` a sorting criterion (field) to use (supported values are: `id`, `type`, `title`, `message`, `account_id`, `account_name`,
-`site_id`, `site_name`, `unit_id`, `unit_name`, `date`; default value is `date`);
+  `site_id`, `site_name`, `unit_id`, `unit_name`, `date`; default value is `date`);
 * `order` a sorting direction (supported values are: `asc` and `desc`; default value is `desc`).
 
 #### Response: `application/json`
@@ -380,7 +380,7 @@ Get all accounts that the authorized client has access to.
 * `page` a 0-based number of a page to fetch;
 * `size` a number of elements per page (by-default it's `10`);
 * `sort` a sorting criterion (field) to use (supported values are: `id`, `name`, `description`, `creation_date`
-  and `change_date`; default value is `creation_date`);
+  and `change_date`; default value is `name`);
 * `order` a sorting direction (supported values are: `asc` and `desc`; default value is `asc`).
 
 #### Response: `application/json`
@@ -541,6 +541,21 @@ Delete account by its identifier.
 * Response code: `204 No Content`
 * Response body: `none`
 
+*There are users in this account:*
+
+* Response code: `400 Bad Request`
+* Response body: `application/json`
+
+```json
+{
+  "errors": [
+    {
+      "message": "There are users in this account, you have to delete them first"
+    }
+  ]
+}
+```
+
 *There are units depended on this account:*
 
 * Response code: `400 Bad Request`
@@ -674,7 +689,7 @@ Get all sites that the authorized client has access to.
 * `page` a 0-based number of a page to fetch;
 * `size` a number of elements per page (by-default it's `10`);
 * `sort` a sorting criterion (field) to use (supported values are: `id`, `name`, `description`, `creation_date`
-  , `change_date`, `account_id` and `account_name`; default value is `creation_date`);
+  , `change_date`, `account_id` and `account_name`; default value is `name`);
 * `order` a sorting direction (supported values are: `asc` and `desc`; default value is `asc`).
 
 #### Response: `application/json`
@@ -727,7 +742,7 @@ Get referenced account's sites that the authorized client has access to.
 * `page` a 0-based number of a page to fetch;
 * `size` a number of elements per page (by-default it's `10`);
 * `sort` a sorting criterion (field) to use (supported values are: `id`, `name`, `description`, `creation_date`
-  , `change_date`, `account_id` and `account_name`; default value is `creation_date`);
+  , `change_date`, `account_id` and `account_name`; default value is `name`);
 * `order` a sorting direction (supported values are: `asc` and `desc`; default value is `asc`).
 
 #### Response: `application/json`
@@ -850,7 +865,7 @@ If `supervisor` creates a new site and specifies invalid account identifier then
 
 Change existing site by its identifier.
 
-#### Access: `user` or `supervisor`
+#### Access: `user` or `supervisor` having `site.edit` permission
 
 #### Request params:
 
@@ -940,7 +955,7 @@ Delete site by its identifier.
 
 Get product by its identifier.
 
-#### Access: `supervisor`, no permissions required
+#### Access: `user` or `supervisor`, no permissions required
 
 #### Request params:
 
@@ -958,7 +973,9 @@ Get product by its identifier.
   "id": "960c1dd9-88d0-4a79-2ddb-4a5289a6cd90",
   "name": "BP216",
   "dimensions": "6-6-4",
-  "description": "BOPIS 2 x 16"
+  "description": "BOPIS 2 x 16",
+  "creation_date": "2022-05-09T17:44:27.016319Z",
+  "change_date": "2022-05-09T17:44:27.016319Z"
 }
 ```
 
@@ -981,7 +998,7 @@ Get product by its identifier.
 
 Get all products ordered by `name` (case-insensitive).
 
-#### Access: `supervisor`, no permissions required
+#### Access: `user` or `supervisor`, no permissions required
 
 #### Request params/body: `none`
 
@@ -993,7 +1010,9 @@ Get all products ordered by `name` (case-insensitive).
     "id": "960c1dd9-88d0-4a79-2ddb-4a5289a6cd90",
     "name": "BP216",
     "dimensions": "6-6-4",
-    "description": "BOPIS 2 x 16"
+    "description": "BOPIS 2 x 16",
+    "creation_date": "2022-05-09T17:44:27.016319Z",
+    "change_date": "2022-05-09T17:44:27.016319Z"
   },
   {
     ...
@@ -1044,7 +1063,9 @@ Create new product.
   "id": "960c1dd9-88d0-4a79-2ddb-4a5289a6cd90",
   "name": "BP216",
   "dimensions": "6-6-4",
-  "description": "BOPIS 2 x 16"
+  "description": "BOPIS 2 x 16",
+  "creation_date": "2022-05-09T17:44:27.016319Z",
+  "change_date": "2022-05-09T17:44:27.016319Z"
 }
 ```
 
@@ -1105,7 +1126,9 @@ Change existing product by its identifier.
   "id": "960c1dd9-88d0-4a79-2ddb-4a5289a6cd90",
   "name": "BP216",
   "dimensions": "6-6-4",
-  "description": "BOPIS 2 x 16"
+  "description": "BOPIS 2 x 16",
+  "creation_date": "2022-05-09T17:44:27.016319Z",
+  "change_date": "2022-05-09T18:10:51.742624Z"
 }
 ```
 
@@ -1177,7 +1200,7 @@ Delete product by its identifier.
 
 Get all available firmware categories.
 
-#### Access: `supervisor` having `system.management` permission
+#### Access: `user` or `supervisor`, no permissions required
 
 #### Request params/body: `none`
 
@@ -1403,6 +1426,12 @@ Get current unit.
     "id": "59e8a55c-c97b-11ed-afa1-0242ac120002",
     "name": "cellvault"
   },
+  "access_cards": [
+    {
+      "id": "710d17f1-9dd5-4e5c-ac1c-ff4e51ea3aca",
+      "name": "card-12345"
+    }
+  ],
   "creation_date": "2022-04-26T07:36:27.218080Z",
   "change_date": "2022-04-26T07:36:27.218080Z"
 }
@@ -1446,6 +1475,12 @@ Get unit by its identifier.
     "id": "59e8a55c-c97b-11ed-afa1-0242ac120002",
     "name": "cellvault"
   },
+  "access_cards": [
+    {
+      "id": "710d17f1-9dd5-4e5c-ac1c-ff4e51ea3aca",
+      "name": "card-12345"
+    }
+  ],
   "creation_date": "2022-04-26T07:36:27.218080Z",
   "change_date": "2022-04-26T07:36:27.218080Z"
 }
@@ -1504,6 +1539,12 @@ Get unit by its name.
     "id": "59e8a55c-c97b-11ed-afa1-0242ac120002",
     "name": "cellvault"
   },
+  "access_cards": [
+    {
+      "id": "710d17f1-9dd5-4e5c-ac1c-ff4e51ea3aca",
+      "name": "card-12345"
+    }
+  ],
   "creation_date": "2022-04-26T07:36:27.218080Z",
   "change_date": "2022-04-26T07:36:27.218080Z"
 }
@@ -1593,7 +1634,7 @@ Get all units that the authorized client has access to.
 * `size` a number of elements per page (by-default it's `10`);
 * `sort` a sorting criterion (field) to use (supported values are: `id`, `name`, `description`, `registration_state`
   , `product_name`, `product_dimensions`, `product_description`, `creation_date`, `change_date`, `account_id`
-  , `account_name`, `site_id` and `site_name`; default value is `creation_date`);
+  , `account_name`, `site_id` and `site_name`; default value is `name`);
 * `order` a sorting direction (supported values are: `asc` and `desc`; default value is `asc`).
 
 #### Response: `application/json`
@@ -1621,6 +1662,12 @@ Get all units that the authorized client has access to.
         "id": "59e8a55c-c97b-11ed-afa1-0242ac120002",
         "name": "cellvault"
       },
+      "access_cards": [
+        {
+          "id": "710d17f1-9dd5-4e5c-ac1c-ff4e51ea3aca",
+          "name": "card-12345"
+        }
+      ],
       "creation_date": "2022-04-26T07:36:27.218080Z",
       "change_date": "2022-04-26T07:36:27.218080Z"
     },
@@ -1659,7 +1706,7 @@ Get referenced site's units that the authorized client has access to.
 * `size` a number of elements per page (by-default it's `10`);
 * `sort` a sorting criterion (field) to use (supported values are: `id`, `name`, `description`, `registration_state`
   , `product_name`, `product_dimensions`, `product_description`, `creation_date`, `change_date`, `account_id`
-  , `account_name`, `site_id` and `site_name`; default value is `creation_date`);
+  , `account_name`, `site_id` and `site_name`; default value is `name`);
 * `order` a sorting direction (supported values are: `asc` and `desc`; default value is `asc`).
 
 #### Response: `application/json`
@@ -1690,6 +1737,12 @@ Get referenced site's units that the authorized client has access to.
         "id": "59e8a55c-c97b-11ed-afa1-0242ac120002",
         "name": "cellvault"
       },
+      "access_cards": [
+        {
+          "id": "710d17f1-9dd5-4e5c-ac1c-ff4e51ea3aca",
+          "name": "card-12345"
+        }
+      ],
       "creation_date": "2022-04-26T07:36:27.218080Z",
       "change_date": "2022-05-09T21:42:11.712862Z"
     },
@@ -1728,7 +1781,7 @@ Get referenced account's units that the authorized client has access to.
 * `size` a number of elements per page (by-default it's `10`);
 * `sort` a sorting criterion (field) to use (supported values are: `id`, `name`, `description`, `registration_state`
   , `product_name`, `product_dimensions`, `product_description`, `creation_date`, `change_date`, `account_id`
-  , `account_name`, `site_id` and `site_name`; default value is `creation_date`);
+  , `account_name`, `site_id` and `site_name`; default value is `name`);
 * `order` a sorting direction (supported values are: `asc` and `desc`; default value is `asc`).
 
 #### Response: `application/json`
@@ -1756,6 +1809,12 @@ Get referenced account's units that the authorized client has access to.
         "id": "59e8a55c-c97b-11ed-afa1-0242ac120002",
         "name": "cellvault"
       },
+      "access_cards": [
+        {
+          "id": "710d17f1-9dd5-4e5c-ac1c-ff4e51ea3aca",
+          "name": "card-12345"
+        }
+      ],
       "creation_date": "2022-04-26T07:36:27.218080Z",
       "change_date": "2022-04-26T07:36:27.218080Z"
     },
@@ -1794,7 +1853,7 @@ Get units that the referenced access card is attached to.
 * `size` a number of elements per page (by-default it's `10`);
 * `sort` a sorting criterion (field) to use (supported values are: `id`, `name`, `description`, `registration_state`
   , `product_name`, `product_dimensions`, `product_description`, `creation_date`, `change_date`, `account_id`
-  , `account_name`, `site_id` and `site_name`; default value is `creation_date`);
+  , `account_name`, `site_id` and `site_name`; default value is `name`);
 * `order` a sorting direction (supported values are: `asc` and `desc`; default value is `asc`).
 
 #### Response: `application/json`
@@ -1822,6 +1881,12 @@ Get units that the referenced access card is attached to.
         "id": "59e8a55c-c97b-11ed-afa1-0242ac120002",
         "name": "cellvault"
       },
+      "access_cards": [
+        {
+          "id": "710d17f1-9dd5-4e5c-ac1c-ff4e51ea3aca",
+          "name": "card-12345"
+        }
+      ],
       "creation_date": "2022-04-26T07:36:27.218080Z",
       "change_date": "2022-04-26T07:36:27.218080Z"
     },
@@ -1899,6 +1964,7 @@ Create new unit.
     "id": "59e8a55c-c97b-11ed-afa1-0242ac120002",
     "name": "cellvault"
   },
+  "access_cards": [],
   "creation_date": "2022-04-26T07:36:27.218080Z",
   "change_date": "2022-04-26T07:36:27.218080Z"
 }
@@ -1974,6 +2040,7 @@ Change existing unit by its identifier.
     "id": "59e8a55c-c97b-11ed-afa1-0242ac120002",
     "name": "cellvault"
   },
+  "access_cards": [],
   "creation_date": "2022-04-26T07:36:27.218080Z",
   "change_date": "2022-04-27T09:12:44.348362Z"
 }
@@ -2432,7 +2499,7 @@ Get all users/supervisors that the authorized client has access to.
 * `page` a 0-based number of a page to fetch;
 * `size` a number of elements per page (by-default it's `10`);
 * `sort` a sorting criterion (field) to use (supported values are: `id`, `username`, `full_name`, `active`
-  , `creation_date`, `change_date`, `account_id` and `account_name`; default value is `creation_date`);
+  , `creation_date`, `change_date`, `account_id` and `account_name`; default value is `username`);
 * `order` a sorting direction (supported values are: `asc` and `desc`; default value is `asc`).
 
 #### Response: `application/json`
@@ -2486,7 +2553,7 @@ Get referenced account's users (supervisors do not belong to any account) that t
 * `page` a 0-based number of a page to fetch;
 * `size` a number of elements per page (by-default it's `10`);
 * `sort` a sorting criterion (field) to use (supported values are: `id`, `username`, `full_name`, `active`
-  , `creation_date`, `change_date`, `account_id` and `account_name`; default value is `creation_date`);
+  , `creation_date`, `change_date`, `account_id` and `account_name`; default value is `username`);
 * `order` a sorting direction (supported values are: `asc` and `desc`; default value is `asc`).
 
 #### Response: `application/json`
@@ -2526,6 +2593,8 @@ Get referenced account's users (supervisors do not belong to any account) that t
 ## POST `/management/user`
 
 Create new user/supervisor.
+
+An e-mail with invitation link/code will be sent to the user.
 
 When creating a new user you must specify its initial permissions (see [security] document). To adjust permissions
 afterward (see `PUT /management/user/{id}/permissions` endpoint) you will need `user.permissions.edit` permission with
@@ -2814,6 +2883,7 @@ validated and automatically erased to meet that requirement.
 
 Generate another invitation for a new user that hasn't signed up yet. Invitation expires in some time after user has
 been created so use this endpoint to refresh an expired invitation.
+A new e-mail with invitation link/code will be sent to the user.
 
 #### Access: `user` or `supervisor` having `user.create` permission
 
@@ -2998,7 +3068,7 @@ Get all access cards that the authorized client has access to.
 * `page` a 0-based number of a page to fetch;
 * `size` a number of elements per page (by-default it's `10`);
 * `sort` a sorting criterion (field) to use (supported values are: `id`, `name`, `description`, `creation_date`
-  , `change_date`, `user_id`, `user_name`, `account_id` and `account_name`; default value is `creation_date`);
+  , `change_date`, `user_id`, `user_name`, `account_id` and `account_name`; default value is `name`);
 * `order` a sorting direction (supported values are: `asc` and `desc`; default value is `asc`).
 
 #### Response: `application/json`
@@ -3053,7 +3123,7 @@ endpoints) that the authorized client has access to.
 * `page` a 0-based number of a page to fetch;
 * `size` a number of elements per page (by-default it's `10`);
 * `sort` a sorting criterion (field) to use (supported values are: `id`, `name`, `description`, `creation_date`
-  , `change_date`, `user_id`, `user_name`, `account_id` and `account_name`; default value is `creation_date`);
+  , `change_date`, `user_id`, `user_name`, `account_id` and `account_name`; default value is `name`);
 * `order` a sorting direction (supported values are: `asc` and `desc`; default value is `asc`).
 
 #### Response: `application/json`
@@ -3108,7 +3178,7 @@ endpoints) that the authorized client has access to.
 * `page` a 0-based number of a page to fetch;
 * `size` a number of elements per page (by-default it's `10`);
 * `sort` a sorting criterion (field) to use (supported values are: `id`, `name`, `description`, `creation_date`
-  , `change_date`, `user_id`, `user_name`, `account_id` and `account_name`; default value is `creation_date`);
+  , `change_date`, `user_id`, `user_name`, `account_id` and `account_name`; default value is `name`);
 * `order` a sorting direction (supported values are: `asc` and `desc`; default value is `asc`).
 
 #### Response: `application/json`
@@ -3163,7 +3233,7 @@ and `POST /management/unit/{id}/cards/detach` endpoints) that the authorized cli
 * `page` a 0-based number of a page to fetch;
 * `size` a number of elements per page (by-default it's `10`);
 * `sort` a sorting criterion (field) to use (supported values are: `id`, `name`, `description`, `creation_date`
-  , `change_date`, `user_id`, `user_name`, `account_id` and `account_name`; default value is `creation_date`);
+  , `change_date`, `user_id`, `user_name`, `account_id` and `account_name`; default value is `name`);
 * `order` a sorting direction (supported values are: `asc` and `desc`; default value is `asc`).
 
 #### Response: `application/json`
@@ -3546,7 +3616,7 @@ Delete access card by its identifier.
 * `size` a number of elements per page (by-default it's `10`);
 * `sort` a sorting criterion (field) to use (supported values are: `id`, `name`, `description`, `registration_state`
   , `product_name`, `product_dimensions`, `product_description`, `creation_date`, `change_date`, `account_id`
-  , `account_name`, `site_id` and `site_name`; default value is `creation_date`);
+  , `account_name`, `site_id` and `site_name`; default value is `name`);
 * `order` a sorting direction (supported values are: `asc` and `desc`; default value is `asc`).
 
 #### Response
@@ -3707,14 +3777,14 @@ Delete access card by its identifier.
 
 *No upgrade request code:*
 
-* Response code: `404 Bad Request`
+* Response code: `204 No Content`
 * Response body: `application/json`
 
 ```json
 {
   "errors": [
     {
-      "message": "No upgrade found for hwos: rpi3-nur23"
+      "message": "No upgrade found"
     }
   ]
 }
@@ -3722,9 +3792,11 @@ Delete access card by its identifier.
 
 ## POST `/management/upgrade`
 
-#### Access: `supervisor`
+Create a new upgrade.
 
-#### Request body: `form-data`
+#### Access: `supervisor` having `system.management` permission
+
+#### Request body: `multipart/form-data`
 
 * `upgrade_info` json that contains information about upgrade.
 
@@ -3772,7 +3844,9 @@ Delete access card by its identifier.
 
 ## PUT `/management/upgrade/{id}`
 
-#### Access: `supervisor`
+Change existing upgrade by its identifier.
+
+#### Access: `supervisor` having `system.management` permission
 
 #### Request params
 
@@ -3821,7 +3895,7 @@ Delete access card by its identifier.
 
 Delete upgrade by its identifier.
 
-#### Access: `supervisor` having `account.delete` permission
+#### Access: `supervisor` having `system.management` permission
 
 #### Request params:
 
@@ -4233,7 +4307,7 @@ E.g. if `unit/#` is on the list then the user can subscribe to `unit/#` or any o
 
 ```json
 {
-  "endpoint": "wss://ws-saas.vaultgroup-cloud.com:8883/mqtt",
+  "endpoint": "wss://ws-saas.vaultgroup-cloud.com:8084/mqtt",
   "username": "john.doe@vaultgroup.co.za",
   "password": "eyJraWQiOiI0NmE2MzllNS1m...",
   "topics": [
