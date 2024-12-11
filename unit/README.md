@@ -3,8 +3,8 @@
 ## Validity
 
 This document is valid as of:
-- cvmain version 1.2.6
-- 7 December 2023
+- cvmain version 2.0.8
+- 22 November 2024
 
 ## Overview
 The vaultgroup locker system comprises a mix of various hardware boards
@@ -58,10 +58,41 @@ docker run -it 825351766998.dkr.ecr.eu-west-1.amazonaws.com/cvmain_rs:latest
 All data is in the /Projects folder, including the cloned git code. The repo is ready
 for PC and android builds.
 
-## MQTT services
+## MQTT Services
 
 The system provides an optional MQTT facility, depending on the solution.
 For details, please refer to the documentation for the MQTT project.
+
+## Locker Sizes
+
+There are no standard locker sizes. The sizes of lockers depend on customer requirements.
+Consequently, labels such as "small", "medium", and "large" make no sense, especially since
+customers sometimes request different locker dimensions after a project has gone live. 
+Instead, locker sizes in the API are represented as a number from 1 to 1000 (inclusive). 
+Larger numbers mean "bigger", and nothing more. A value of 0 means "unknown", and is 
+typically used on projects where all lockers have the same size, and therefore 
+dimensions do not matter. 
+
+Each number is a code for a locker size for the project in question. These locker sizes will 
+not change for the duration of the project. For instance, suppose there are 2 projects: 
+ProjectA and ProjectB
+
+ProjectA might have the codes/sizes 100, 500, and 900, where (LxWxH):
+100 is a locker with dimensions 30cm^3
+500 is a locker with dimensions 10cm x 100cm x 50cm
+900 is a locker with dimensions 20cm x 200cm x 50cm
+
+Project B only has one locker size, so it may be assigned the code 500, where:
+500 is a locker with dimensions 100cm x 100cm x 200cm
+Here, we could also use the code 0, but if we suspect other locker sizes may be required in
+future, a number makes more sense
+
+These codes are absolute values within the context of a project only. As seen in the example above,
+we may re-use codes between projects. The codes (eg. 100, 500, 900, 432, 876, etc) do not relate to
+the dimensions of the locker in any way other than "a larger value code represents a larger locker".
+
+The locker codes and their associated dimensions will be provided to developers, and these may
+be hardcoded in the business logic if required.
 
 ## Basic Messages
 
@@ -426,6 +457,12 @@ message LockerStateMessage {
    * See comment in SetLockerStateRequest
    */
   uint32 state = 1;
+  
+  /**
+   * The size of the locker. See the section on
+   * locker sizes for an explanation
+   */
+  uint32 locker_size = 2;
 }
 ```
 
