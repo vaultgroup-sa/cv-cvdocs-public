@@ -72,17 +72,14 @@ message LcdWriteDataRequest {
 }
 
 message UserAuditLogRequest {
-  uint32 code = 1;
+  uint32 version = 1;
+
+  uint32 code = 2;
 
   /**
     Valid values are "info", "warning", "error", "fatal" only. All other values will result in an error.
    */
-  string level = 2;
-
-  /**
-    An optional string. May be used to indicate the source of the error
-   */
-  string facility = 3;
+  string level = 3;
 
   /**
     The error message, no more than 1024 bytes
@@ -92,6 +89,8 @@ message UserAuditLogRequest {
   string priority = 5;
 
   string app = 6;
+
+  string parameters_json = 7;
 }
 
 message GetAuthTokenResponse {
@@ -134,6 +133,8 @@ message LockerStateMessage {
    * See comment in SetLockerStateRequest
    */
   uint32 state = 1;
+
+  uint32 locker_size = 2;
 }
 
 message LockerStateResponseMessage {

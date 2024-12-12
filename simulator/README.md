@@ -49,3 +49,16 @@ The part `5-6-6-3 true true` is a configuration of hardware to simulate which st
 - `dimensions` property defines how many columns (and how many lockers in each column) a simulated vault should have (e.g. `3-3` means two columns having 3 lockers each);
 - `use_cv_locks` is a boolean property which defines a type of locks to be simulated (`true` — CV locks that can be locked or unlocked via API, `false` — "Chinese" locks that can be unlocked via API and lock themselves automatically once a locker door is closed);
 - `use_multistate_slave` is a boolean property which enables (if set to `true`) third state for a locker (locked/unlocked + ready_to_open which means that locking mechanism is engaged but can be disengaged by pressing a "lock" button which appears on UI) and also an LED indication (green = unlocked, orange = ready_to_open, red = locked).
+
+
+## Advanced
+The simulator accepts the following optional environment variables:
+
+- COMMS=net - if specified, a TCP server will run on port 6677 and will be used instead of the default serial port
+- WS_PORT=xxxx - where xxxx is the websocket port on which to listen. Useful if the default port 5000 is already used
+
+Please note that these environment variables must be passed to the application. If used with docker,
+some appropriate docker configuration will be required
+
+
+End
