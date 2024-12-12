@@ -996,7 +996,20 @@ An documented example is shown below
   //to the VG master board. If your hardware solution uses this keypad,
   //set this option to true. If not, leave this option as false for a 
   //performance boost.
-  "use_keypad": false
+  "use_keypad": false,
+  
+  //defaults to true. If false, the rtc will not be synchronized. Useful when
+  //using eg. an android tablet and we have no control over the RTC. 
+  "use_rtc": false,
+  
+  //defaults to false. If true then absence of internet connectivity will be assumed.
+  pub use_standalone_mode: false
+    
+  //for the tamper system, how long a door is allowed to be opened
+  // after an unlock command is issued. applies only to non-cv locks.
+  // defaults to 30000ms
+  pub tamper_max_door_open_time_ms: 30000
+
 }
 ```
 
