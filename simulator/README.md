@@ -31,7 +31,7 @@ docker tag public.ecr.aws/h2j0d2q1/simulator-rs:latest simulator-rs
 
 All preparations are done, we can run the simulator right away:
 ```shell
-docker run -p 5000:5000 -p 7777:7777 -p 4200:4200 simulator-rs 5-6-6-3 true true <username> <password>
+docker run -p 5000:5000 -p 7777:7777 -p 8082:8082 -p 4200:4200 simulator-rs 5-6-6-3 true true <username> <password>
 ```
 
 It will take some time to start, and then you can simply navigate to http://localhost:4200 in your web browser to open the UI.
@@ -40,7 +40,7 @@ It will take some time to start, and then you can simply navigate to http://loca
 
 The command we just ran needs some explanation.
 
-The part `-p 5000:5000 -p 7777:7777 -p 4200:4200` is responsible for port mapping (exposure) configuration.
+The part `-p 5000:5000 -p 7777:7777 -p 8082:8082 -p 4200:4200` is responsible for port mapping (exposure) configuration.
 Once created the docker container will expose ports 5000 (WebSocket Server for communication between UI and the simulator), 7777 (gRPC Server) and 4200 (Web UI).
 
 For more information about port mapping, see [docker documentation](https://docs.docker.com/config/containers/container-networking/).
