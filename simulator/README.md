@@ -31,7 +31,7 @@ docker tag public.ecr.aws/h2j0d2q1/simulator-rs:latest simulator-rs
 
 All preparations are done, we can run the simulator right away:
 ```shell
-docker run -p 5000:5000 -p 7777:7777 -p 4200:4200 simulator-rs 5-6-6-3 true true
+docker run -p 5000:5000 -p 7777:7777 -p 4200:4200 simulator-rs 5-6-6-3 true true <username> <password>
 ```
 
 It will take some time to start, and then you can simply navigate to http://localhost:4200 in your web browser to open the UI.
