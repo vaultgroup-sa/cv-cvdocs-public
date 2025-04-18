@@ -3,15 +3,17 @@
 ## Validity
 
 This document is valid as of:
-- cvmain version 2.1.0
-- 12 December 2024
+- cvmain version 3.0.4
+- 18 April 2025
 
 ## Overview
-The vaultgroup locker system comprises a mix of various hardware boards
+The VaultGroup locker system comprises a mix of various hardware boards
 and the software required to control that hardware. All hardware access
 has been abstracted away into an application called "cvmain". "cvmain"
 includes a built-in gRPC server that exposes various endpoints that may
 be used to control the underlying hardware.
+
+For more information on gRPC, please visit [grpc.io](https://grpc.io)
 
 Application developers only need to integrate with "cvmain". There is no
 mandated programming language. "cvmain" has been written on, and tested with
@@ -20,9 +22,13 @@ are known to work). The gRPC client may run on the Raspberry Pi (RPI) provided b
 cellvault, or it could run on a different machine eg. an Android tablet, a Windows
 PC with a suitable network connection, etc. 
 
+We have generated gRPC clients for Rust, Java, Kotlin, Dart, Javascript, and Typescript.
+Many more languages are supported officially as per the [grpc.io](https://grpc.io) website,
+and unofficially (via libraries for your programming language)
+
 Consequently, not all endpoints may be needed for all integrations. For instance,
 an old-fashioned keypad and screen are optional input/output mechanisms provided by
-vaultgroup, and are suitable for backoffice and more industrial applications. However,
+VaultGroup, and are suitable for backoffice and more industrial applications. However,
 should the application being developed require a more modern UI, the unit may be
 equipped with a touch screen or, as previously mentioned, an Android tablet may be used.
 In this case the old-fashioned keypad and screen, and their associated endpoints, will not
@@ -30,7 +36,7 @@ be needed.
 
 ## The .proto file
 
-The gRPC proto file is available on the vaultgroup documentation website
+The gRPC proto file is available on the VaultGroup documentation website
 
 ## Building
 
@@ -93,6 +99,54 @@ the dimensions of the locker in any way other than "a larger value code represen
 
 The locker codes and their associated dimensions will be provided to developers, and these may
 be hardcoded in the business logic if required.
+
+## Client Startup Guide
+
+The gRPC server must be started before the gRPC client. The server is started automatically when cvmain executes. However,
+there is a startup delay, and depending on the hardware being used, this delay may range from several milliseconds to several
+seconds.
+
+The delay is most notable on Android solutions where cvmain is packaged into a library that is started by the main
+application. In this case, the following sequence is what most developers expect to do:
+
+1. start your Android application
+2. Your android application starts cvmain from the VG provided .jar file
+3. Create gRPC client and communicate with cvmain
+
+The problem occurs between steps 2 and 3. Specifically, the client at step 3 may be ready to send gRPC calls BEFORE
+the server is ready at step 2.
+
+There are 2 solutions:
+1. (Recommended) call the get_version() endpoint from the client repeatedly (say, with a 100ms to 500ms delay between calls) 
+   until a response is received (if the client and server are on different machines, adjust this time accordingly to compensate
+   for network latency). If no response is received after 20 seconds, assume error. 20 seconds is typically sufficient 
+   as the server starts within 0.5-2 seconds in most configurations. Feel free to adjust the 20 second value depending on your
+   hardware configuration and startup sequence.
+2. (Not Recommended) delay your first call for a fixed amount of time. For instance, if you know that the server will be ready
+   after 5 seconds, delay your first gRPC call for 5 seconds.
+
+The first approach is preferred because you will be able to continue with gRPC calls within, typically, 100ms of the server
+starting. If you used a fixed delay, your startup time may be considerably longer.
+
+The following is a pseudocode function:
+
+```
+function boolean is_server_running(client) {
+    client.set_timeout(100) //100ms connect/read timeout
+    
+    var timer = new_timer_ms(20000) //create a timer that times out after 20000 millis or 20 seconds
+    while (!timer.timed_out()) {
+        //make an api call
+        var result = client.get_version()
+        if result.is_timed_out() {
+            continue;
+        }
+        return true;
+    }
+    
+    return false;
+}
+```
 
 ## Basic Messages
 
