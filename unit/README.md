@@ -3,8 +3,12 @@
 ## Validity
 
 This document is valid as of:
-- cvmain version 3.0.4
-- 18 April 2025
+- cvmain version 3.0.6
+- 27 May 2025
+
+## Changelog
+- Started tracking a changelog
+- Added section: Network Errors And Message Cancelling
 
 ## Overview
 The VaultGroup locker system comprises a mix of various hardware boards
@@ -147,6 +151,37 @@ function boolean is_server_running(client) {
     return false;
 }
 ```
+
+## Network Errors And Message Cancelling
+
+Operation cancelling is not supported. There is no automatic rollback feature on 
+the server. Operations such as locking/unlocking lockers involve controlling physical
+locks. It is not a pure software operation (like a database query). This is explained
+in more detail below.
+
+gRPC messages can be interrupted, typically due to network error, or possibly because
+of an error in the client application. I will discuss the scenario of a client connection
+closing before receiving a valid response. This may be due to poor timing, or a valid
+network error, or the client application crashing. The reason is unimportant.
+
+The correct sequence of operations should be the following:
+1. client sends gRPC request
+2. server processes request
+3. server sends response
+4. client accepts response
+5. client closes connection
+
+Now, suppose the connection was closed unexpectedly at some point before step 5. Depending
+on the gRPC request in question, this may have serious consequences.
+
+Certain endpoints, the most important being lock_locker() and unlock_locker() control
+physical hardware. If the gRPC client issued a lock or unlock command and then
+attempted to "cancel" the operation by closing the connection, or alternatively the
+application crashed, the server may still process this request. That is to say, a signal
+will be sent to the locker to unlock, for instance, which in turn will disengage the
+physical lock on the unit and may cause the locker door to swing open. This scenario
+is not reversible using software. Therefore, care must be taken to avoid such events.
+
 
 ## Basic Messages
 
